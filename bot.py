@@ -1,20 +1,34 @@
+import os
+
 import discord
 from discord.ext import commands
+from dotenv import load_dotenv
 
-TOKEN = "DEIN_BOT_TOKEN"
-ALLOWED_ROLE_ID = 1167921587606007878
+load_dotenv()
+
+TOKEN = os.getenv("DISCORD_TOKEN")
+ALLOWED_ROLE_ID = int(os.getenv("ALLOWED_ROLE_ID", "0"))
+
+if not TOKEN:
+    raise RuntimeError("DISCORD_TOKEN fehlt in der .env-Datei.")
+
+if not ALLOWED_ROLE_ID:
+    raise RuntimeError("ALLOWED_ROLE_ID fehlt in der .env-Datei.")
 
 intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+
 def has_allowed_role(ctx):
     return any(role.id == ALLOWED_ROLE_ID for role in ctx.author.roles)
+
 
 @bot.event
 async def on_ready():
     print(f"Bot ist online als {bot.user}")
+
 
 @bot.command()
 async def join(ctx):
@@ -35,6 +49,7 @@ async def join(ctx):
 
     await ctx.send(f"✅ Bin jetzt in **{channel.name}**.")
 
+
 @bot.command()
 async def leave(ctx):
     if not has_allowed_role(ctx):
@@ -46,5 +61,6 @@ async def leave(ctx):
         await ctx.send("✅ Bin aus dem Voice-Channel gegangen.")
     else:
         await ctx.send("❌ Ich bin gerade in keinem Voice-Channel.")
+
 
 bot.run(TOKEN)
